@@ -153,7 +153,6 @@
     window.onload = () => {
       const valorTotal = localStorage.getItem("valorTotal") || "0.00";
       document.getElementById("valor").value = parseFloat(valorTotal).toFixed(2);
-      iniciarContagemRegressiva();
       carregarComprovante();
     };
 
@@ -222,35 +221,33 @@ function crc16(payload) {
   return crc.toString(16).toUpperCase().padStart(4, '0');
 }
 
-// Função para gerar o código Pix
 function gerarPix() {
-  const valor = document.getElementById('valor').value || "0.00";
+  // Pegamos o valor final já com o frete
+  const valorTotal = parseFloat(localStorage.getItem("valorTotal") || "0.00").toFixed(2);
 
-  // Monta o payload do Pix sem o CRC
   const payloadSemCRC =
     buildTLV("00", "01") +
     buildTLV("01", "12") +
     buildTLV("26",
       buildTLV("00", "br.gov.bcb.pix") +
-      buildTLV("01", "fdc580f0-ed5a-4a06-ba98-3c50eec2b28d")  // Chave Pix
+      buildTLV("01", "dfabef5c-9abe-4005-9c22-f69ce46b1ace")
     ) +
     buildTLV("52", "0000") +
     buildTLV("53", "986") +
-    buildTLV("54", valor) +
+    buildTLV("54", valorTotal) +
     buildTLV("58", "BR") +
-    buildTLV("59", "M&M Variedades") +
-    buildTLV("60", "SAO PAULO") +
-    buildTLV("62", buildTLV("05", "uNBspALatl")) +
+    buildTLV("59", "MARIA MARCIA UCH") +
+    buildTLV("60", "MOJUI DOS CAMPO") +
+    buildTLV("62",
+      buildTLV("05", "Jk3Sj3Nhr5mH5j4jVmNuCYyW")
+    ) +
     "6304";
 
-  // Calcula o CRC e adiciona ao payload
   const payloadFinal = payloadSemCRC + crc16(payloadSemCRC);
 
-  // Exibe o payload (código Pix) e o botão de copiar
   document.getElementById("payload").innerText = payloadFinal;
   document.getElementById("copiarBtn").style.display = "block";
 
-  // Gera o QR Code do Pix
   document.getElementById("qrcode").innerHTML = "";
   new QRCode(document.getElementById("qrcode"), {
     text: payloadFinal,
@@ -258,9 +255,10 @@ function gerarPix() {
     height: 256
   });
 
-  // Iniciar a contagem regressiva após gerar o QR Code
   iniciarContagemRegressiva();
 }
+
+
 
 // Função para iniciar a contagem regressiva (por exemplo, 5 minutos)
 function iniciarContagemRegressiva() {
@@ -317,9 +315,12 @@ function mostrarComprovante() {
     comprovanteTexto += `${item.nome} - ${item.quantidade} x R$ ${precoTotalItem.toFixed(2)}\n`;
   });
 
-  const valor = parseFloat(localStorage.getItem("valorTotal") || "0");
+  const totalFinal = parseFloat(localStorage.getItem("valorTotal") || "0").toFixed(2);
   const frete = parseFloat(localStorage.getItem("localidade_frete") || "0");
-  const totalFinal = (valor + frete).toFixed(2);
+
+  comprovanteTexto += `\nFrete (${localStorage.getItem("localidade_nome")}): R$ ${frete.toFixed(2)}`;
+  comprovanteTexto += `\nTotal com frete: R$ ${totalFinal}\nForma de pagamento: Pix\n`;
+
 
   comprovanteTexto += `\nFrete (${localStorage.getItem("localidade_nome")}): R$ ${frete.toFixed(2)}`;
   comprovanteTexto += `\nTotal com frete: R$ ${totalFinal}\nForma de pagamento: Pix\n`;

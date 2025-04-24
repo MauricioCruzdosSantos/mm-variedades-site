@@ -178,29 +178,29 @@
         limparButton.style.display = "inline-block";
       }
 
-      carrinho.forEach((item, index) => {
+            carrinho.forEach((item, index) => {
         const precoTotalItem = item.preco * (item.quantidade || 1);
         total += precoTotalItem;
 
         const div = document.createElement("div");
         div.className = "produto";
         div.innerHTML = 
-          `<div class="info">
+            `<div class="info">
             <strong>${item.nome}</strong>
             <div>R$ ${precoTotalItem.toFixed(2)}</div>
             <div class="quantidade">
-              <button onclick="alterarQuantidade(${index}, -1)">➖</button>
-              <span> ${item.quantidade || 1} </span>
-              <button onclick="alterarQuantidade(${index}, 1)">➕</button>
-              <button onclick="removerItem(${index})">🗑️</button>
+                <button onclick="alterarQuantidade(${index}, -1)">➖</button>
+                <span> ${item.quantidade || 1} </span>
+                <button onclick="alterarQuantidade(${index}, 1)">➕</button>
+                <button onclick="removerItem(${index})">🗑️</button>
             </div>
-          </div>
-          <div class="descricao">${item.descricao || "Sem descrição"}</div>
-          <img src="${item.imagem}" alt="${item.nome}">`;
+            </div>
+            <div class="descricao">${item.descricao || "Sem descrição"}</div>
+            <img src="${item.imagem}" alt="${item.nome}">`;
         lista.appendChild(div);
-      });
+        });
 
-      document.getElementById("valor-total").innerText = `R$ ${total.toFixed(2)}`;
+      calcularTotalComFrete();
     }
 
     // Função para alterar a quantidade do produto no carrinho
