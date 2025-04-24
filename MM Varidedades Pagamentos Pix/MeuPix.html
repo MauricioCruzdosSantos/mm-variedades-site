@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>PIX | M&M Variedades</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fefce8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #4b006e;
+    }
+
+    h1 {
+      color: #ffcc00;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      background: #fff7d6;
+      border: 2px solid #ffcc00;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    input, button {
+      padding: 0.8rem;
+      margin: 0.6rem 0;
+      font-size: 1rem;
+      border: 2px solid #ffcc00;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    button {
+      background-color: #ffcc00;
+      color: #4b006e;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+      background-color: #ffe066;
+      transform: scale(1.03);
+    }
+
+    button:active {
+      background-color: #37004d;
+      transform: scale(0.97);
+    }
+
+    #qrcode {
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    #payload {
+      margin-top: 1rem;
+      background: #fff9e5;
+      border: 1px dashed #aaa;
+      padding: 1rem;
+      word-break: break-word;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    #copiarBtn {
+      display: none;
+      margin-top: 1rem;
+      background-color: #4b006e;
+      color: #fff;
+      border: none;
+      font-weight: bold;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    #copiarBtn:hover {
+      background-color: #6c1a94;
+      transform: scale(1.03);
+    }
+
+    #copiarBtn:active {
+      background-color: #37004d;
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+  <h1>PIX - M&M Variedades</h1>
+  <div class="container">
+    <label for="valor">Digite o valor (ex: 25.50)</label>
+    <input id="valor" type="text" placeholder="R$">
+    <button onclick="gerarPix()">Gerar QR Code</button>
+    <div id="qrcode"></div>
+    <div id="payload"></div>
+    <button id="copiarBtn" onclick="copiarCodigo()">📋 Copiar Código PIX</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    function buildTLV(id, value) {
+      return id + value.length.toString().padStart(2, '0') + value;
+    }
+
+    function crc16(payload) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < payload.length; i++) {
+        crc ^= payload.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+          crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+        }
+        crc &= 0xFFFF;
+      }
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function gerarPix() {
+      const valor = document.getElementById('valor').value || "0.00";
+
+      const payloadSemCRC =
+        buildTLV("00", "01") +
+        buildTLV("01", "12") +
+        buildTLV("26",
+          buildTLV("00", "br.gov.bcb.pix") +
+          buildTLV("01", "fdc580f0-ed5a-4a06-ba98-3c50eec2b28d")
+        ) +
+        buildTLV("52", "0000") +
+        buildTLV("53", "986") +
+        buildTLV("54", valor) +
+        buildTLV("58", "BR") +
+        buildTLV("59", "Mauricio Cruz dos Santos") +
+        buildTLV("60", "SAO PAULO") +
+        buildTLV("62", buildTLV("05", "uNBspALatl")) +
+        "6304";
+
+      const payloadFinal = payloadSemCRC + crc16(payloadSemCRC);
+
+      document.getElementById("payload").innerText = payloadFinal;
+      document.getElementById("copiarBtn").style.display = "block";
+
+      document.getElementById("qrcode").innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), {
+        text: payloadFinal,
+        width: 256,
+        height: 256
+      });
+    }
+
+    function copiarCodigo() {
+      const codigo = document.getElementById("payload").innerText;
+      if (!codigo) return;
+
+      navigator.clipboard.writeText(codigo).then(() => {
+        const btn = document.getElementById("copiarBtn");
+        const textoOriginal = btn.innerText;
+        btn.innerText = "✅ Copiado!";
+        btn.disabled = true;
+
+        setTimeout(() => {
+          btn.innerText = textoOriginal;
+          btn.disabled = false;
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
