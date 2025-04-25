@@ -1,1 +1,37 @@
+name: Proxy Google Apps Script
+
+on:
+  workflow_dispatch:
+
+jobs:
+  proxy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: |
+          npm install axios
+
+      - name: Make request to Google Apps Script
+        run: |
+          const axios = require('axios');
+          
+          const googleScriptURL = 'https://script.google.com/macros/s/AKfycbw1awW9FdikNHTydEwThMbILHpI4egr-mTrjWb83bC4M-BUg3ZPWmRTbFpWK3CLdtJu/exec';
+          
+          axios.get(googleScriptURL, {
+            params: {
+              email: 'usuario@example.com',
+              senha: 'senha'
+            }
+          })
+          .then(response => {
+            console.log(response.data);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
 
